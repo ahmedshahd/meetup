@@ -18,12 +18,20 @@ const DUMMY_MEETUPS = [
       "https://cdn.theculturetrip.com/wp-content/uploads/2021/07/cairo.jpg",
   },
 ];
-const HomePage = () => {
+const HomePage = (props) => {
   return (
     <>
-      <MeetupList meetups={DUMMY_MEETUPS} />
+      <MeetupList meetups={props.meetups} />
     </>
   );
 };
+
+export async function getStaticProps() {
+  return {
+    props: {
+      meetups: DUMMY_MEETUPS,
+    },
+  };
+}
 
 export default HomePage;
