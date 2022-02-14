@@ -1,43 +1,52 @@
+import { MongoClient, ObjectId } from "mongodb";
 import MeetupDetail from "../../components/meetups/MeetupDetail";
-const MeetupDetails = () => {
+const MeetupDetails = (props) => {
   return (
     <MeetupDetail
-      image="https://static.saltinourhair.com/wp-content/uploads/2019/03/23140923/cairo-pyramids-giza.jpg"
-      title="first meetup"
-      address="cairo, naser city 18 moaz eldoula"
-      description="the description"
+      image={props.meetupDate.image}
+      title={props.meetupDate.title}
+      address={props.meetupDate.address}
+      description={props.meetupDate.description}
     />
   );
 };
-export function getStaticPaths() {
+export async function getStaticPaths() {
+  const client = await MongoClient.connect(
+    "mongodb+srv://ahmed:1234@cluster0.eebz1.mongodb.net/meetups?retryWrites=true&w=majority"
+  );
+  const db = client.db();
+  const meetupsCollection = db.collection("meetups");
+  const meetups = await meetupsCollection.find({}, { _id: 1 }).toArray();
+  client.close();
+
   return {
     fallback: false,
-    paths: [
-      {
-        params: {
-          meetupId: "1",
-        },
-      },
-      {
-        params: {
-          meetupId: "2",
-        },
-      },
-    ],
+    paths: meetups.map((meetup) => ({
+      params: { meetupId: meetup._id.toString() },
+    })),
   };
 }
 
-export function getStaticProps(context) {
+export async function getStaticProps(context) {
   const { meetupId } = context.params;
-  console.log(meetupId);
+  const client = await MongoClient.connect(
+    "mongodb+srv://ahmed:1234@cluster0.eebz1.mongodb.net/meetups?retryWrites=true&w=majority"
+  );
+  const db = client.db();
+  const meetupsCollection = db.collection("meetups");
+  const selectedMeetup = await meetupsCollection.findOne({
+    _id: ObjectId(meetupId),
+  });
+
+  client.close();
   return {
     props: {
       meetupDate: {
-        image:
-          "https://static.saltinourhair.com/wp-content/uploads/2019/03/23140923/cairo-pyramids-giza.jpg",
-        title: "first meetup",
-        address: "cairo, naser city 18 moaz eldoula",
-        description: "the description",
+        id: selectedMeetup._id.toString(),
+        image: selectedMeetup.image,
+        description: selectedMeetup.description,
+        title: selectedMeetup.title,
+        address: selectedMeetup.address,
       },
     },
   };
